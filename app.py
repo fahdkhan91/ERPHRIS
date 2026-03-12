@@ -18,7 +18,7 @@ def init_oracle():
         print("Oracle Thick Mode initialized.")
     except Exception as e:
         print(f"Oracle Client Error: {e}")
-
+init_oracle()
 app = Flask(__name__)
 app.secret_key = 'your_very_secret_key'
 
