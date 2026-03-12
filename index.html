@@ -2,7 +2,7 @@
 <html>
 
 <head>
-
+<link rel="stylesheet" href="/static/style.css">
 <title>Oracle Dashboard</title>
 
 <style>
@@ -70,21 +70,24 @@ color:white;
 
 <h2>Dashboard</h2>
 
-<button onclick="loadData('Grade Wise Vacancy')">Grade Wise Vacancy</button>
-<button onclick="loadData('Circle Wise Vacancy')">Circle Wise Vacancy</button>
-<button onclick="loadData('Job Wise Vacancy')">Job Wise Vacancy</button>
-<button onclick="loadData('3 Levels of Organization Hierarchy Vacancy')">3 Levels of Organization Hierarchy Vacancy</button>
-<button onclick="loadData('Retirement Forecast')">Retirement Forecast</button>
-<button onclick="loadData('Sub Division Wise Vacancy')">Sub Division Wise Vacancy</button>
-<button onclick="loadData('Payroll Detail')">Payroll Detail</button>
+
+<button onclick="loadData('Grade_Wise_Vacancy')">Grade_Wise_Vacancy</button>
+<button onclick="loadData('Circle_Wise_Vacancy')">Circle_Wise_Vacancy</button>
+<button onclick="loadData('Job_Wise_Vacancy')">Job_Wise_Vacancy</button>
+<button onclick="loadData('3_Levels_of_Organization_Hierarchy_Vacancy')">3_Levels_of_Organization Hierarchy_Vacancy</button>
+<button onclick="loadData('Retirement_Forecast')">Retirement_Forecast</button>
+<button onclick="loadData('Sub_Division_Wise_Vacancy')">Sub_Division_Wise_Vacancy</button>
+<button onclick="downloadData()">Download_Excel</button>
 
 </div>
 
 <div class="content">
 
+
+
 <h2>Results</h2>
 
-<input id="search" placeholder="Search..." onkeyup="fetchData()">
+<input id="search" placeholder="Search..." onkeyup="filterTable()">
 
 <br><br>
 
@@ -93,6 +96,10 @@ color:white;
 </div>
 
 <script src="/static/script.js"></script>
+
+<hr style="border: 0.5px solid #34495e; margin: 20px 0;">
+<button onclick="window.location.href='/logout'" style="color: #e74c3c;">Logout</button>
+
 
 </body>
 </html>
