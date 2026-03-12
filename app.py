@@ -6,23 +6,18 @@ import io
 import os
 import platform
 
-oracledb.init_oracle_client(lib_dir=r"C:\oracle\instantclient_23_0")
 
 def init_oracle():
     try:
-        # Check if we are on Render (Linux) or Local (Windows)
+        # On Linux (Render Docker), we use the environment path
         if platform.system() == "Linux":
-            # Render path
-            lib_dir = os.path.join(os.getcwd(), "instantclient")
-            oracledb.init_oracle_client(lib_dir=lib_dir)
+            oracledb.init_oracle_client() # No lib_dir needed; Docker handles it
         else:
-            # Your local Windows path (update to your actual path)
+            # Local Windows path
             oracledb.init_oracle_client(lib_dir=r"C:\oracle\instantclient_23_0")
         print("Oracle Thick Mode initialized.")
     except Exception as e:
         print(f"Oracle Client Error: {e}")
-
-init_oracle()
 
 app = Flask(__name__)
 app.secret_key = 'your_very_secret_key'
