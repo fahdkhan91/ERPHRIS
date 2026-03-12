@@ -3,7 +3,7 @@ import oracledb
 from flask import send_file
 import pandas as pd
 import io
-
+import so
 
 oracledb.init_oracle_client(lib_dir=r"C:\oracle\instantclient_23_0")
 
