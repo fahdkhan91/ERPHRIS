@@ -1,8 +1,14 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request,url_for, session,redirect
 import oracledb
+from flask import send_file
+import pandas as pd
+import io
+
+
 oracledb.init_oracle_client(lib_dir=r"C:\oracle\instantclient_23_0")
 
 app = Flask(__name__)
+app.secret_key = 'your_very_secret_key'
 
 # Oracle connection
 connection = oracledb.connect(
@@ -11,21 +17,78 @@ connection = oracledb.connect(
     dsn="10.10.12.15:1521/PERPROD"
 )
 
+
+
+@app.route("/download/<query_name>")
+def download(query_name):
+
+    sql = queries.get(query_name)
+
+    data = run_query(sql)
+
+    df = pd.DataFrame(data)
+
+    output = io.BytesIO()
+
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="Report")
+
+    output.seek(0)
+
+    return send_file(
+        output,
+        download_name=query_name + ".xlsx",
+        as_attachment=True
+    )
+
+
+USERS = {
+    "admin": "pesco123"
+}
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username in USERS and USERS[username] == password:
+            session['logged_in'] = True
+            session['username'] = username
+            return redirect(url_for('dashboard'))
+        else:
+            return "Invalid credentials", 401
+            
+    return render_template('login.html')
+
+@app.route('/')
+def dashboard():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
+    return render_template('index.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    return redirect(url_for('login'))
+
+
 queries = {
 
 
-"Grade Wise Vacancy": """
+"Grade_Wise_Vacancy": """
 WITH position_data AS (
     SELECT 
         grade.grade_id,
-        grade.name AS grade_name,
+        grade.name AS GRADE,
         SUM(pos.max_persons) AS sanctioned
-    FROM hr.hr_all_positions_f# pos
-    JOIN per_grades grade
+    FROM per_grades grade 
+    JOIN   hr.hr_all_positions_f#   pos
       ON TRIM(UPPER(grade.name)) = TRIM(UPPER(pos.attribute6))
     WHERE NVL(pos.location_id, -1) <> 27625
       AND SYSDATE BETWEEN pos.effective_start_date AND pos.effective_end_date
-    GROUP BY grade.grade_id, grade.name
+    GROUP BY  grade.grade_id,grade.name
+ORDER BY grade.name
 ),
 
 assignment_data AS (
@@ -45,7 +108,7 @@ assignment_data AS (
 )
 
 SELECT 
-    p.grade_name,
+    p.GRADE,
     p.sanctioned,
     NVL(a.regular, 0) AS regular,
     NVL(a.contract, 0) AS contract,
@@ -72,11 +135,11 @@ SELECT
 FROM position_data p
 LEFT JOIN assignment_data a
     ON p.grade_id = a.grade_id
-ORDER BY p.grade_name
+ORDER BY p.grade_id,p.GRADE
 
 """,
 
-"Circle Wise Vacancy": """
+"Circle_Wise_Vacancy": """
 WITH circle_orgs AS (
     
     SELECT organization_id, name
@@ -160,7 +223,7 @@ ORDER BY c.name
 
 """,
 
-"Job Wise Vacancy": """
+"Job_Wise_Vacancy": """
 WITH position_data AS (
     SELECT 
         pos.job_id,
@@ -227,10 +290,10 @@ LEFT JOIN
 ON 
     p.job_id = a.job_id
 ORDER BY 
-    p.job_name
+    p.job_name,p.job_id
 """,
 
-"3 Levels of Organization Hierarchy Vacancy": """
+"3_Levels_of_Organization_Hierarchy_Vacancy": """
 WITH org_hierarchy AS (
     SELECT
         child.organization_id    AS org_id,
@@ -316,7 +379,7 @@ WHERE oh.grandparent_name IS NOT NULL
 ORDER BY level_1, level_2, level_3
 """,
 
-"Retirement Forecast": """
+"Retirement_Forecast": """
 WITH retirement_data AS (
     SELECT
         paf.grade_id,
@@ -344,10 +407,9 @@ FROM retirement_data r
 LEFT JOIN per_grades g
     ON g.grade_id = r.grade_id
 GROUP BY g.name
-ORDER BY g.name
 """,
 
-"Sub Division Wise Vacancy": """
+"Sub_Division_Wise_Vacancy": """
 WITH position_data AS (
     SELECT 
         pos.organization_id,
@@ -403,8 +465,7 @@ SELECT
 FROM position_data p
 LEFT JOIN assignment_data a
     ON p.organization_id = a.organization_id
-ORDER BY p.name
-"""
+ORDER BY p.name"""
 
 }
 
